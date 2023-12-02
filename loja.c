@@ -13,6 +13,7 @@ struct Produto {
 struct Compra {
     char nomeProduto[50];
     float precoProduto;
+    int quantidade;
 };
 
 // Função para validar o login
@@ -47,7 +48,7 @@ void cadastrarProduto(struct Produto* estoque, int* totalProdutos) {
         (*totalProdutos)++;
         printf("Produto cadastrado com sucesso!\n");
 
-        printf("Deseja cadastrar outro produto? (Digite S para continuar, N para sair): ");
+        printf("Deseja cadastrar outro produto? (Digite N para sair, S para continuar): ");
         scanf(" %c", &continuar);
         while(getchar() != '\n'); // limpa o buffer de entrada
     }
@@ -73,40 +74,77 @@ void listarProdutos(struct Produto* estoque, int totalProdutos) {
 }
 
 // Função para comprar produto
-void cadastrarProduto(struct Produto* estoque, int* totalProdutos) {
+void comprarProduto(struct Produto* estoque, int totalProdutos, struct Compra* historicoCompras, int* totalCompras) {
+    int codigoProduto;
     char continuar = 'S';
-    char buffer[50];
-    while (toupper(continuar) == 'S') {
-        printf("Digite o nome do produto: ");
-        fgets(estoque[*totalProdutos].nome, 50, stdin);
-        estoque[*totalProdutos].nome[strcspn(estoque[*totalProdutos].nome, "\n")] = 0; // remove a nova linha do final
+    int quantidadeTotal = 0;
+    float valorTotal = 0.0f;
 
-        printf("Digite o preço do produto: ");
-        fgets(buffer, 50, stdin);
-        float preco;
-        sscanf(buffer, "%f", &preco);
-        estoque[*totalProdutos].preco = preco;
+    do {
+        printf("Digite o código do produto que deseja comprar: ");
+        scanf("%d", &codigoProduto);
+        while(getchar() != '\n'); // limpa o buffer de entrada
 
-        printf("Digite a quantidade de estoque disponível: ");
-        fgets(buffer, 50, stdin);
-        estoque[*totalProdutos].quantidade = atoi(buffer);
+        // Verifica se o código do produto é válido
+        if (codigoProduto < 1 || codigoProduto > totalProdutos) {
+            printf("Código de produto inválido.\n");
+            continue;
+        }
 
-        (*totalProdutos)++;
-        printf("Produto cadastrado com sucesso!\n");
+        // Ajusta o código do produto para ser usado como índice do array (os índices do array começam em 0)
+        codigoProduto--;
 
-        printf("Deseja cadastrar outro produto? (Digite N para sair, S para continuar): ");
+        if (estoque[codigoProduto].quantidade > 0) {
+            // Reduz a quantidade do produto no estoque
+            estoque[codigoProduto].quantidade--;
+
+            // Adiciona a compra ao histórico de compras
+            strcpy(historicoCompras[*totalCompras].nomeProduto, estoque[codigoProduto].nome);
+            historicoCompras[*totalCompras].precoProduto = estoque[codigoProduto].preco;
+            historicoCompras[*totalCompras].quantidade = 1;
+            (*totalCompras)++;
+
+            // Atualiza a quantidade total e o valor total
+            quantidadeTotal++;
+            valorTotal += estoque[codigoProduto].preco;
+
+            printf("Produto adicionado à compra com sucesso!\n");
+        } else {
+            printf("Produto indisponível no estoque.\n");
+        }
+
+        printf("Deseja continuar comprando? (Digite N para finalizar a compra, S para continuar): ");
         scanf(" %c", &continuar);
         while(getchar() != '\n'); // limpa o buffer de entrada
-    }
+    } while (toupper(continuar) == 'S');
+
+    printf("Compra finalizada com sucesso!\n");
+
+    exibirNotaFiscal(historicoCompras, *totalCompras, quantidadeTotal, valorTotal);
 }
 
-    // Função para exibir o histórico de compras
-void exibirHistoricoCompras(struct Compra* historicoCompras, int totalCompras) {
-    printf("Histórico de Compras:\n");
+// Exibe a nota fiscal
+void exibirNotaFiscal(struct Compra* historicoCompras, int totalCompras, int quantidadeTotal, float valorTotal) {
+    printf("\nNota Fiscal:\n");
     for (int i = 0; i < totalCompras; i++) {
-        printf("%d. Produto: %s, Preço: %.2f\n", i + 1, historicoCompras[i].nomeProduto, historicoCompras[i].precoProduto);
+        printf("Produto: %s, Quantidade: %d, Preço: R$ %.2f\n", 
+               historicoCompras[i].nomeProduto, 
+               historicoCompras[i].quantidade, 
+               historicoCompras[i].precoProduto);
     }
-    
+    printf("Quantidade total de produtos: %d\n", quantidadeTotal);
+    printf("Valor total da compra: R$ %.2f\n", valorTotal);
+}
+
+// Função para exibir o histórico de compras
+void exibirHistoricoCompras(struct Compra* historicoCompras, int totalCompras) {
+    printf("\nHistórico de Compras:\n");
+    for (int i = 0; i < totalCompras; i++) {
+        printf("Produto: %s, Quantidade: %d, Preço: R$ %.2f\n", 
+               historicoCompras[i].nomeProduto, 
+               historicoCompras[i].quantidade, 
+               historicoCompras[i].precoProduto);
+    }
 }
 
 int main() {
