@@ -17,7 +17,8 @@ struct Compra {
 
 // Função para validar o login
 int validarLogin(char* nome, char* senha) {
-    if (strcmp(nome, "mistoquente") == 0 && strcmp(senha, "batatafrita123") == 0) {
+    if ((strcmp(nome, "Felipe") == 0 && strcmp(senha, "gostoso") == 0) ||
+        (strcmp(nome, "Alycia") == 0 && strcmp(senha, "Taylor23") == 0)) {
         return 1; // Credenciais válidas
     } else {
         return 0; // Credenciais inválidas
@@ -26,34 +27,28 @@ int validarLogin(char* nome, char* senha) {
 
 // Função para cadastrar um produto
 void cadastrarProduto(struct Produto* estoque, int* totalProdutos) {
-    int continuar = 1;
-    while (continuar) {
-        while(getchar() != '\n'); // limpa o buffer de entrada
-
+    char continuar = 'S';
+    char buffer[50];
+    while (toupper(continuar) == 'S') {
         printf("Digite o nome do produto: ");
         fgets(estoque[*totalProdutos].nome, 50, stdin);
         estoque[*totalProdutos].nome[strcspn(estoque[*totalProdutos].nome, "\n")] = 0; // remove a nova linha do final
 
         printf("Digite o preço do produto: ");
-        scanf("%f", &estoque[*totalProdutos].preco);
-        while(getchar() != '\n'); // limpa o buffer de entrada
+        fgets(buffer, 50, stdin);
+        float preco;
+        sscanf(buffer, "%f", &preco);
+        estoque[*totalProdutos].preco = preco;
 
-        printf("Digite a quantidade de estoque disponível: "); // novo prompt para a quantidade de estoque disponível
-        scanf("%d", &estoque[*totalProdutos].quantidade);
-        while(getchar() != '\n'); // limpa o buffer de entrada
-
-        (*totalProdutos)++;
-        printf("Produto cadastrado com sucesso!\n");
-
-        printf("Deseja cadastrar outro produto? (Digite 0 para sair, qualquer outro número para continuar): ");
-        scanf("%d", &continuar);
-        while(getchar() != '\n'); // limpa o buffer de entrada
+        printf("Digite a quantidade de estoque disponível: ");
+        fgets(buffer, 50, stdin);
+        estoque[*totalProdutos].quantidade = atoi(buffer);
 
         (*totalProdutos)++;
         printf("Produto cadastrado com sucesso!\n");
 
-        printf("Deseja cadastrar outro produto? (Digite 0 para sair, qualquer outro número para continuar): ");
-        scanf("%d", &continuar);
+        printf("Deseja cadastrar outro produto? (Digite S para continuar, N para sair): ");
+        scanf(" %c", &continuar);
         while(getchar() != '\n'); // limpa o buffer de entrada
     }
 }
@@ -62,42 +57,54 @@ void cadastrarProduto(struct Produto* estoque, int* totalProdutos) {
 void listarProdutos(struct Produto* estoque, int totalProdutos) {
     printf("Lista de Produtos:\n");
     for (int i = 0; i < totalProdutos; i++) {
-        printf("%d. Nome: %s, Preço: %.2f\n", i + 1, estoque[i].nome, estoque[i].preco);
+        char preco[50];
+        sprintf(preco, "%.2f", estoque[i].preco);
+        for (int j = 0; preco[j]; j++) {
+            if (preco[j] == '.') {
+                preco[j] = ',';
+            }
+        }
+        printf("%d. %s, R$ %s, Quantidade Disponível: %d\n", 
+               i + 1, 
+               estoque[i].nome, 
+               preco, 
+               estoque[i].quantidade);
     }
 }
 
 // Função para comprar produto
-void comprarProduto(struct Produto* estoque, int totalProdutos, struct Compra* historicoCompras, int* totalCompras) {
-    int escolha;
-    listarProdutos(estoque, totalProdutos);
+void cadastrarProduto(struct Produto* estoque, int* totalProdutos) {
+    char continuar = 'S';
+    char buffer[50];
+    while (toupper(continuar) == 'S') {
+        printf("Digite o nome do produto: ");
+        fgets(estoque[*totalProdutos].nome, 50, stdin);
+        estoque[*totalProdutos].nome[strcspn(estoque[*totalProdutos].nome, "\n")] = 0; // remove a nova linha do final
 
-    printf("Digite o número do produto que deseja comprar: ");
-    scanf("%d", &escolha);
+        printf("Digite o preço do produto: ");
+        fgets(buffer, 50, stdin);
+        float preco;
+        sscanf(buffer, "%f", &preco);
+        estoque[*totalProdutos].preco = preco;
 
-    if (escolha >= 1 && escolha <= totalProdutos) {
-        if (estoque[escolha - 1].quantidade > 0) {
-            estoque[escolha - 1].quantidade--; // subtrai a quantidade do produto do estoque
-            
-            // Armazena as informações da compra no histórico de compras
-            strcpy(historicoCompras[*totalCompras].nomeProduto, estoque[escolha - 1].nome);
-            historicoCompras[*totalCompras].precoProduto = estoque[escolha - 1].preco;
-            (*totalCompras)++;
-            
-            printf("Você comprou o produto: %s por %.2f\n", estoque[escolha - 1].nome, estoque[escolha - 1].preco);
-        } else {
-            printf("Desculpe, este produto está fora de estoque.\n");
-        }
-    } else {
-        printf("Opção inválida.\n");
+        printf("Digite a quantidade de estoque disponível: ");
+        fgets(buffer, 50, stdin);
+        estoque[*totalProdutos].quantidade = atoi(buffer);
+
+        (*totalProdutos)++;
+        printf("Produto cadastrado com sucesso!\n");
+
+        printf("Deseja cadastrar outro produto? (Digite N para sair, S para continuar): ");
+        scanf(" %c", &continuar);
+        while(getchar() != '\n'); // limpa o buffer de entrada
     }
 }
 
-// Função para exibir o histórico de compras
+    // Função para exibir o histórico de compras
 void exibirHistoricoCompras(struct Compra* historicoCompras, int totalCompras) {
     printf("Histórico de Compras:\n");
-    for (int i = 0; i < totalCompras; i++)
-    {
-        printf("%d. Nome: %s, Preço: %.2f\n", i + 1, historicoCompras[i].nomeProduto, historicoCompras[i].precoProduto);
+    for (int i = 0; i < totalCompras; i++) {
+        printf("%d. Produto: %s, Preço: %.2f\n", i + 1, historicoCompras[i].nomeProduto, historicoCompras[i].precoProduto);
     }
     
 }
@@ -122,6 +129,7 @@ int main() {
         printf("1. Entrar\n");
         printf("2. Sair\n");
         scanf("%d", &funcao);
+        while(getchar() != '\n'); // limpa o buffer de entrada
 
         switch (funcao) {
             case 1:
@@ -154,9 +162,11 @@ int main() {
                     printf("3. Comprar Produto\n");
                     printf("4. Histórico de Compras\n");
                     printf("5. Sair\n");
+                    
 
                     scanf("%d", &funcao);
-
+                    while(getchar() != '\n'); // limpa o buffer de entrada
+                    
                     switch (funcao) {
                         case 1:
                             cadastrarProduto(estoque, &totalProdutos);
