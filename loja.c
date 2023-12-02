@@ -108,6 +108,10 @@ void comprarProduto(struct Produto* estoque, int totalProdutos, struct Compra* h
             quantidadeTotal++;
             valorTotal += estoque[codigoProduto].preco;
 
+            // Imprime o preço do produto e o valor total
+            printf("Preço do produto: R$ %.2f\n", estoque[codigoProduto].preco);
+            printf("Valor total: R$ %.2f\n", valorTotal);
+
             printf("Produto adicionado à compra com sucesso!\n");
         } else {
             printf("Produto indisponível no estoque.\n");
