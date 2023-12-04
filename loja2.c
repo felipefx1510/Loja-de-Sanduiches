@@ -11,11 +11,11 @@ struct Produto {
 
 // estrutura compra
 struct Compra {
-    char nomeProduto[50];
-    float precoProduto;
-    int quantidade;
+    struct Produto produtos[50]; // array para armazenar os produtos comprados
+    int totalProdutos; // total de produtos na compra
     char notaFiscal[500]; // novo campo para armazenar a nota fiscal
     int id;
+    int quantidadeComprada[50]; // array para armazenar a quantidade de cada produto comprado
 };
 
 // Função para validar o login
@@ -83,12 +83,14 @@ void listarProdutos(struct Produto* estoque, int totalProdutos) {
 
 // Função para comprar produto
 void comprarProduto(struct Produto* estoque, int totalProdutos, struct Compra* historicoCompras, int* totalCompras) {
-    memset(historicoCompras, 0, sizeof(struct Compra) * 50);
-    *totalCompras = 0;
     int codigoProduto;
     char continuar = 'S';
     int quantidadeTotal = 0;
     double valorTotal = 0.0;
+
+    // Inicializa uma nova compra
+    struct Compra novaCompra;
+    novaCompra.totalProdutos = 0;
 
     do {
         printf("Digite o código do produto que deseja comprar: ");
@@ -108,21 +110,10 @@ void comprarProduto(struct Produto* estoque, int totalProdutos, struct Compra* h
             // Reduz a quantidade do produto no estoque
             estoque[codigoProduto].quantidade--;
 
-            // Adiciona a compra ao histórico de compras
-            historicoCompras[*totalCompras].id = *totalCompras + 1; // atribui um id único à compra
-            strcpy(historicoCompras[*totalCompras].nomeProduto, estoque[codigoProduto].nome);
-            historicoCompras[*totalCompras].precoProduto = estoque[codigoProduto].preco;
-            historicoCompras[*totalCompras].quantidade = 1;
-
-             // Gera a nota fiscal e a armazena na estrutura Compra
-            char notaFiscal[500];
-            sprintf(notaFiscal, "Produto: %s, Quantidade: %d, Preço: R$ %.2f\n", 
-                estoque[codigoProduto].nome, 
-                1, 
-                estoque[codigoProduto].preco);
-            strcpy(historicoCompras[*totalCompras].notaFiscal, notaFiscal);
-
-            (*totalCompras)++;
+            // Adiciona o produto à nova compra
+            novaCompra.produtos[novaCompra.totalProdutos] = estoque[codigoProduto];
+            novaCompra.quantidadeComprada[novaCompra.totalProdutos] = 1; // adiciona 1 à quantidade comprada do produto
+            novaCompra.totalProdutos++;
 
             // Atualiza a quantidade total e o valor total
             quantidadeTotal++;
@@ -138,18 +129,22 @@ void comprarProduto(struct Produto* estoque, int totalProdutos, struct Compra* h
         }
 
         do {
-        printf("Deseja continuar comprando? (Digite S para sim, N para não): ");
-        scanf(" %c", &continuar);
-        while(getchar() != '\n'); // limpa o buffer de entrada
+            printf("Deseja continuar comprando? (Digite S para sim, N para não): ");
+            scanf(" %c", &continuar);
+            while(getchar() != '\n'); // limpa o buffer de entrada
 
-        if (toupper(continuar) != 'S' && toupper(continuar) != 'N') {
-            printf("Entrada inválida. Por favor, digite S para sim ou N para não.\n");
-        }
-    } while (toupper(continuar) != 'S' && toupper(continuar) != 'N');
+            if (toupper(continuar) != 'S' && toupper(continuar) != 'N') {
+                printf("Entrada inválida. Por favor, digite S para sim ou N para não.\n");
+            }
+        } while (toupper(continuar) != 'S' && toupper(continuar) != 'N');
 
-} while (toupper(continuar) == 'S');
+    } while (toupper(continuar) == 'S');
 
-    printf("Compra finalizada com sucesso!\n");
+    // Adiciona a nova compra ao histórico de compras
+    historicoCompras[*totalCompras] = novaCompra;
+    (*totalCompras)++;
+
+    printf("Compra finalizada com sucesso");
 
     exibirNotaFiscal(historicoCompras, *totalCompras, quantidadeTotal, valorTotal);
 }
@@ -158,10 +153,12 @@ void comprarProduto(struct Produto* estoque, int totalProdutos, struct Compra* h
 void exibirNotaFiscal(struct Compra* historicoCompras, int totalCompras, int quantidadeTotal, double valorTotal) {
     printf("\nNota Fiscal:\n");
     for (int i = 0; i < totalCompras; i++) {
-        printf("Produto: %s, Quantidade: %d, Preço: R$ %.2f\n", 
-               historicoCompras[i].nomeProduto, 
-               historicoCompras[i].quantidade, 
-               historicoCompras[i].precoProduto);
+        for (int j = 0; j < historicoCompras[i].totalProdutos; j++) {
+            printf("Produto: %s, Quantidade: %d, Preço: R$ %.2f\n", 
+                   historicoCompras[i].produtos[j].nome, 
+                   1, 
+                   historicoCompras[i].produtos[j].preco);
+        }
     }
     printf("Quantidade total de produtos: %d\n", quantidadeTotal);
     printf("Valor total da compra: R$ %.2lf\n", valorTotal);
@@ -169,40 +166,34 @@ void exibirNotaFiscal(struct Compra* historicoCompras, int totalCompras, int qua
 
 // Função para exibir o histórico de compras
 void exibirHistoricoCompras(struct Compra* historicoCompras, int totalCompras) {
+    int numeroCompra;
     printf("\nHistórico de Compras:\n");
     for (int i = 0; i < totalCompras; i++) {
         printf("Compra %d\n", i + 1);
-        printf("%s\n", historicoCompras[i].notaFiscal);
     }
-
-    char verDetalhes;
-    printf("Deseja ver os detalhes de uma compra? (Digite S para sim, N para não): ");
-    scanf(" %c", &verDetalhes);
+    printf("Digite a nota que deseja abrir: ");
+    scanf("%d", &numeroCompra);
     while(getchar() != '\n'); // limpa o buffer de entrada
 
-    while (toupper(verDetalhes) == 'S') {
-        int numeroCompra;
-        printf("Digite o número da compra: ");
-        scanf("%d", &numeroCompra);
-        while(getchar() != '\n'); // limpa o buffer de entrada
+    // Verifica se o número da compra é válido
+    if (numeroCompra < 1 || numeroCompra > totalCompras) {
+        printf("Número de compra inválido.\n");
+        return;
+    }
 
-        if (numeroCompra >= 1 && numeroCompra <= totalCompras) {
-            printf("Detalhes da Compra %d:\n", numeroCompra);
-            printf("Produto: %s, Quantidade: %d, Preço: R$ %.2f\n", 
-                   historicoCompras[numeroCompra - 1].nomeProduto, 
-                   historicoCompras[numeroCompra - 1].quantidade, 
-                   historicoCompras[numeroCompra - 1].precoProduto);
-        } else {
-            printf("Número de compra inválido.\n");
-        }
+    // Ajusta o número da compra para ser usado como índice do array (os índices do array começam em 0)
+    numeroCompra--;
 
-        printf("Deseja ver os detalhes de outra compra? (Digite S para sim, N para não): ");
-        scanf(" %c", &verDetalhes);
-        while(getchar() != '\n'); // limpa o buffer de entrada
+    printf("Compra %d\n", numeroCompra + 1);
+    for (int j = 0; j < historicoCompras[numeroCompra].totalProdutos; j++) {
+        printf("Produto: %s, Quantidade: %d, Preço: R$ %.2f\n", 
+               historicoCompras[numeroCompra].produtos[j].nome, 
+               historicoCompras[numeroCompra].quantidadeComprada[j], 
+               historicoCompras[numeroCompra].produtos[j].preco);
     }
 }
 
-int main() {
+    int main() {
     setlocale(LC_ALL, "Portuguese_Brazil");
 
     int funcao;
